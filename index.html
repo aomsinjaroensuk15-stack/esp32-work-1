@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32 Smart LED Controller</title>
+    <title>ESP32 Relay Controller</title>
     <style>
         :root {
             --bg-color: #0f172a;
             --card-bg: #1e293b;
             --text-color: #f8fafc;
-            --accent-color: #f97316; /* โทนส้มสุดล้ำ */
+            --accent-color: #f97316;
             --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
         }
-
         body {
             margin: 0;
             font-family: 'Segoe UI', system-ui, sans-serif;
@@ -23,61 +22,38 @@
             align-items: center;
             min-height: 100vh;
         }
-
         .container {
             background: var(--card-bg);
             padding: 2.5rem;
             border-radius: 24px;
             box-shadow: var(--shadow);
             width: 100%;
-            max-width: 380px;
+            max-width: 340px;
             text-align: center;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
-
-        h1 {
-            font-size: 1.8rem;
-            margin: 0 0 0.5rem 0;
-            letter-spacing: -0.025em;
-        }
-
-        p.subtitle {
-            font-size: 0.9rem;
-            color: #94a3b8;
-            margin-bottom: 2rem;
-        }
-
-        .input-group {
+        h1 { font-size: 1.8rem; margin: 0 0 0.5rem 0; }
+        p.subtitle { font-size: 0.9rem; color: #94a3b8; margin-bottom: 1.5rem; }
+        
+        .ip-config {
             margin-bottom: 1.5rem;
             text-align: left;
         }
-
-        label {
-            display: block;
-            font-size: 0.75rem;
+        .ip-config label {
+            font-size: 0.8rem;
             color: #94a3b8;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 600;
+            display: block;
+            margin-bottom: 0.4rem;
         }
-
-        input {
+        .ip-config input {
             width: 100%;
-            padding: 0.75rem 1rem;
-            border-radius: 12px;
-            border: 1px solid #475569;
-            background-color: #0f172a;
-            color: var(--text-color);
-            font-size: 1rem;
+            padding: 0.6rem;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: white;
+            font-family: monospace;
             box-sizing: border-box;
-            outline: none;
-            transition: all 0.3s;
-        }
-
-        input:focus {
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
         }
 
         .status-indicator {
@@ -89,7 +65,6 @@
             font-size: 0.9rem;
             color: #94a3b8;
         }
-
         .dot {
             width: 10px;
             height: 10px;
@@ -97,12 +72,10 @@
             background-color: #64748b;
             transition: all 0.3s ease;
         }
-
         .dot.on {
             background-color: #22c55e;
             box-shadow: 0 0 12px #22c55e;
         }
-
         .control-btn {
             width: 100%;
             padding: 1.2rem;
@@ -115,116 +88,102 @@
             background: #334155;
             color: #cbd5e1;
         }
-
         .control-btn.active {
             background: var(--accent-color);
             color: white;
             box-shadow: 0 0 25px rgba(249, 115, 22, 0.45);
         }
-
-        .control-btn:hover {
-            transform: translateY(-2px);
-        }
+        .control-btn:hover { transform: translateY(-2px); }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Smart Light</h1>
-        <p class="subtitle">ESP32 Dashboard</p>
-
-        <div class="input-group">
-            <label for="ipAddress">ESP32 IP Address</label>
-            <input type="text" id="ipAddress" placeholder="เช่น 192.168.1.50">
+        <h1>Relay Control</h1>
+        <p class="subtitle">IoT Home Automation</p>
+        
+        <div class="ip-config">
+            <label for="ipAddress">ESP32 IP Address:</label>
+            <input type="text" id="ipAddress" value="">
         </div>
 
         <div class="status-indicator">
             <div id="statusDot" class="dot"></div>
-            <span id="statusText">Disconnected</span>
+            <span id="statusText">กำลังตรวจสอบ...</span>
         </div>
-
         <button id="toggleBtn" class="control-btn">TURN ON</button>
     </div>
 
     <script>
+        // ⚙️ [คุณสามารถตั้งค่าเปลี่ยนเลข IP ตัวหลักของคุณตรงนี้ได้เลยครับ]
+        const DEFAULT_ESP32_IP = "192.168.1.58";
+
         const ipInput = document.getElementById('ipAddress');
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
         const toggleBtn = document.getElementById('toggleBtn');
-        
-        let isLightOn = false;
+        let isRelayOn = false;
 
-        // ดึง IP เก่าที่เคยบันทึกไว้ในเบราว์เซอร์มาแสดงอัตโนมัติ
-        if (localStorage.getItem('saved_esp32_ip')) {
-            ipInput.value = localStorage.getItem('saved_esp32_ip');
-            checkStatus();
+        // ดึงค่าเริ่มต้นมาใส่ในช่องกรอกข้อมูล
+        ipInput.value = DEFAULT_ESP32_IP;
+
+        function getBaseUrl() {
+            let ip = ipInput.value.trim();
+            if (!ip.startsWith('http://') && !ip.startsWith('https://')) {
+                ip = 'http://' + ip;
+            }
+            return ip;
         }
 
-        ipInput.addEventListener('change', () => {
-            localStorage.setItem('saved_esp32_ip', ipInput.value.trim());
-            checkStatus();
-        });
-
         async function sendCommand(endpoint) {
-            const ip = ipInput.value.trim();
-            if (!ip) {
-                alert('โปรดระบุ IP Address ของบอร์ดก่อนครับ! 💡');
-                return;
-            }
-
             try {
-                const response = await fetch(`http://${ip}/${endpoint}`);
+                const response = await fetch(`${getBaseUrl()}/${endpoint}`);
                 if (response.ok) {
                     const state = await response.text();
                     updateUI(state === 'ON');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                statusText.textContent = "Error Connecting";
+                console.error("Error sending command:", error);
+                statusText.textContent = "เชื่อมต่อล้มเหลว";
                 statusDot.className = "dot";
             }
         }
 
         async function checkStatus() {
-            const ip = ipInput.value.trim();
-            if (!ip) return;
-
+            if (!ipInput.value.trim()) return;
             try {
-                const response = await fetch(`http://${ip}/status`);
+                const response = await fetch(`${getBaseUrl()}/status`);
                 if (response.ok) {
                     const state = await response.text();
                     updateUI(state === 'ON');
                 }
             } catch (e) {
-                statusText.textContent = "Offline";
+                statusText.textContent = "ออฟไลน์";
                 statusDot.className = "dot";
             }
         }
 
         function updateUI(isOn) {
-            isLightOn = isOn;
-            if (isLightOn) {
+            isRelayOn = isOn;
+            if (isRelayOn) {
                 statusDot.className = "dot on";
-                statusText.textContent = "Connected • Light ON";
+                statusText.textContent = "ออนไลน์ • รีเลย์เปิดไฟอยู่";
                 toggleBtn.textContent = "TURN OFF";
                 toggleBtn.classList.add('active');
             } else {
                 statusDot.className = "dot";
-                statusText.textContent = "Connected • Light OFF";
+                statusText.textContent = "ออนไลน์ • รีเลย์ปิดไฟอยู่";
                 toggleBtn.textContent = "TURN ON";
                 toggleBtn.classList.remove('active');
             }
         }
 
         toggleBtn.addEventListener('click', () => {
-            if (isLightOn) {
-                sendCommand('led/off');
-            } else {
-                sendCommand('led/on');
-            }
+            sendCommand(isRelayOn ? 'relay/off' : 'relay/on');
         });
 
-        // ตรวจสอบสถานะการเชื่อมต่อกับบอร์ดอัตโนมัติทุกๆ 5 วินาที
-        setInterval(checkStatus, 5000);
+        // ตรวจสอบสถานะการเชื่อมต่ออัตโนมัติทุกๆ 3 วินาที
+        checkStatus();
+        setInterval(checkStatus, 3000);
     </script>
 </body>
 </html>
