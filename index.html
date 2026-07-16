@@ -3,118 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32 Smart Timer Relay</title>
+    <title>⚡ Advanced IoT Relay Console</title>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-color: #f8fafc;
-            --accent-color: #f97316;
-            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --panel-bg: rgba(30, 41, 59, 0.7);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --neon-orange: #f97316;
+            --neon-green: #10b981;
+            --neon-red: #ef4444;
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
+
         body {
             margin: 0;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            padding: 20px;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            padding: 20px;
+            box-sizing: border-box;
         }
-        .container {
-            background: var(--card-bg);
-            padding: 2rem;
-            border-radius: 24px;
-            box-shadow: var(--shadow);
+
+        .dashboard {
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--panel-border);
+            border-radius: 28px;
+            padding: 2.5rem;
             width: 100%;
-            max-width: 360px;
+            max-width: 420px;
+            box-shadow: var(--glass-shadow);
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        h1 { font-size: 1.6rem; margin: 0 0 0.2rem 0; }
-        p.subtitle { font-size: 0.85rem; color: #94a3b8; margin-bottom: 1.5rem; }
-        
-        .section-box {
-            background: rgba(15, 23, 42, 0.6);
-            padding: 1rem;
+
+        h1 {
+            font-size: 1.8rem;
+            margin: 0 0 0.2rem 0;
+            background: linear-gradient(to right, #f97316, #facc15);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.03);
             border-radius: 16px;
+            padding: 1.2rem;
             margin-bottom: 1.2rem;
             text-align: left;
         }
-        .section-title { font-size: 0.8rem; font-weight: bold; color: var(--accent-color); text-transform: uppercase; margin-bottom: 0.5rem; }
-        
-        .ip-config input, .timer-input input {
-            width: 100%; padding: 0.6rem; background: #0f172a; border: 1px solid #334155;
-            border-radius: 8px; color: white; font-family: monospace; box-sizing: border-box;
-        }
-        
-        .timer-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
-        .timer-row label { width: 70px; font-size: 0.9rem; color: #cbd5e1; }
-        .timer-row input[type="time"] { flex: 1; padding: 0.5rem; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; }
 
-        .esp-time { font-size: 1.1rem; font-family: monospace; color: #22c55e; text-align: center; font-weight: bold; }
-        
-        .status-indicator { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin: 1.5rem 0; font-size: 0.9rem; color: #94a3b8; }
-        .dot { width: 10px; height: 10px; border-radius: 50%; background-color: #64748b; transition: all 0.3s ease; }
-        .dot.on { background-color: #22c55e; box-shadow: 0 0 12px #22c55e; }
-        
-        .btn { width: 100%; padding: 1rem; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 14px; cursor: pointer; transition: all 0.2s; }
-        .btn-main { background: #334155; color: #cbd5e1; margin-bottom: 0.5rem; }
-        .btn-main.active { background: var(--accent-color); color: white; box-shadow: 0 0 20px rgba(249, 115, 22, 0.4); }
-        .btn-sub { background: #22c55e; color: white; font-size: 0.95rem; padding: 0.7rem; }
-        .btn:hover { transform: translateY(-2px); opacity: 0.9; }
-        
-        .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 0.9rem; }
+        .card-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--neon-orange);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 0.8rem;
+            display: block;
+        }
+
+        /* Input Styles */
+        input[type="text"], input[type="time"] {
+            width: 100%;
+            padding: 0.75rem;
+            background: #090d16;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--neon-orange);
+            box-shadow: 0 0 10px rgba(249, 115, 22, 0.2);
+        }
+
+        /* Bulb Status Icon Animation */
+        .bulb-container {
+            margin: 1.5rem 0;
+            display: inline-block;
+            position: relative;
+        }
+
+        .bulb-icon {
+            font-size: 4rem;
+            color: #334155;
+            transition: all 0.4s ease;
+            filter: drop-shadow(0 0 0px transparent);
+        }
+
+        .bulb-icon.active {
+            color: #facc15;
+            filter: drop-shadow(0 0 25px rgba(250, 204, 21, 0.6));
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            margin-bottom: 1.5rem;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #64748b;
+        }
+        .dot.active { background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); }
+        .dot.error { background: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); }
+
+        /* Timer UI Elements */
+        .time-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+        }
+        .time-row label { font-size: 0.9rem; color: #cbd5e1; }
+        .time-row input[type="time"] { width: 65%; }
+
+        /* Switch UI Toggle */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 1rem;
+            padding-top: 0.8rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* Button Custom Styles */
+        .btn {
+            width: 100%;
+            padding: 1.1rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(90deg, #334155, #475569);
+            color: #cbd5e1;
+            letter-spacing: 0.5px;
+        }
+
+        .btn.power-on {
+            background: linear-gradient(90deg, #ea580c, #f97316);
+            color: white;
+            box-shadow: 0 0 25px rgba(249, 115, 22, 0.4);
+        }
+
+        .btn:hover { transform: translateY(-2px); opacity: 0.95; }
+        .btn:active { transform: translateY(1px); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .btn-sync {
+            background: var(--neon-green);
+            color: #0f172a;
+            padding: 0.6rem;
+            font-size: 0.9rem;
+            border-radius: 10px;
+            margin-top: 0.5rem;
+        }
+
+        /* Security Warning Banner */
+        .warning-banner {
+            display: none;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--neon-red);
+            border-radius: 12px;
+            padding: 0.8rem;
+            font-size: 0.78rem;
+            color: #fca5a5;
+            text-align: left;
+            margin-bottom: 1.2rem;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Smart Scheduler</h1>
-        <p class="subtitle">ระบบตั้งเวลาเปิด-ปิด รีเลย์อัจฉริยะ</p>
-        
-        <div class="section-box ip-config">
-            <span class="section-title">ESP32 Connection</span>
-            <input type="text" id="ipAddress" value="">
+
+    <div class="dashboard">
+        <h1>SMART RELAY</h1>
+        <div class="subtitle">SYSTEM INTERFACE v2.0</div>
+
+        <div id="warningBanner" class="warning-banner">
+            ⚠️ <strong>ตรวจพบการบล็อกความปลอดภัย (HTTPS Mixed Content):</strong> ดูเหมือนคุณกำลังรันไฟล์นี้ผ่านระบบโฮสติ้งที่ปลอดภัย ทำให้ไม่สามารถกดคุยกับไอพีภายในบ้านตรงๆ ได้ แนะนำให้ดับเบิ้ลคลิกเปิดไฟล์ <code>index.html</code> จากในคอมพิวเตอร์ของคุณโดยตรงเพื่อใช้งานครับ
         </div>
 
-        <div class="section-box">
-            <span class="section-title">ESP32 Board Time</span>
-            <div id="clockText" class="esp-time">00:00:00</div>
+        <div class="card">
+            <span class="card-title">📡 Network Configuration</span>
+            <input type="text" id="ipAddress" placeholder="เช่น 192.168.1.58">
+            <div style="display: flex; justify-content: space-between; margin-top: 0.8rem; font-size: 0.85rem;">
+                <span style="color: var(--text-sub);">บอร์ดคิวเวลาปัจจุบัน:</span>
+                <span id="boardClock" style="font-family: monospace; font-weight: bold; color: var(--neon-green);">--:--:--</span>
+            </div>
         </div>
 
-        <div class="section-box">
-            <span class="section-title">Timer Setting (ตั้งเวลา)</span>
-            <div class="timer-row">
-                <label>เปิดไฟ (ON):</label>
+        <div class="bulb-container">
+            <div id="bulbIcon" class="bulb-icon">💡</div>
+        </div>
+
+        <div>
+            <div class="status-badge">
+                <div id="statusDot" class="dot"></div>
+                <span id="statusText">กำลังตรวจสอบการเชื่อมต่อ...</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <span class="card-title">⏰ Automated Scheduler</span>
+            <div class="time-row">
+                <label>เปิด (ON):</label>
                 <input type="time" id="onTime">
             </div>
-            <div class="timer-row">
-                <label>ปิดไฟ (OFF):</label>
+            <div class="time-row">
+                <label>ปิด (OFF):</label>
                 <input type="time" id="offTime">
             </div>
-            <div class="checkbox-row">
-                <input type="checkbox" id="timerEnabled">
-                <label for="timerEnabled">เปิดใช้งานระบบตั้งเวลาอัตโนมัติ</label>
+            <div class="switch-container">
+                <label for="timerEnabled" style="font-size: 0.88rem; color: #cbd5e1;">เปิดระบบตั้งเวลาอัตโนมัติ</label>
+                <input type="checkbox" id="timerEnabled" style="transform: scale(1.3); cursor: pointer;">
             </div>
-            <button id="saveTimerBtn" class="btn btn-sub" style="margin-top: 10px;">บันทึกเวลาที่ตั้งไว้</button>
+            <button id="saveTimerBtn" class="btn btn-sync">💾 บันทึกตารางเวลาลงบอร์ด</button>
         </div>
 
-        <div class="status-indicator">
-            <div id="statusDot" class="dot"></div>
-            <span id="statusText">กำลังเชื่อมต่อ...</span>
-        </div>
-        
-        <button id="toggleBtn" class="btn btn-main">TURN ON</button>
+        <button id="toggleBtn" class="btn">TURN ON</button>
     </div>
 
     <script>
-        // ⚙️ [ตั้งค่าเลข IP เริ่มต้นของคุณที่ตรงนี้ได้เลยครับ]
-        const DEFAULT_ESP32_IP = "192.168.1.58";
+        // ⚙️ [เปลี่ยนไอพีเริ่มต้นเป็นของบอร์ดคุณตรงนี้ได้เลยครับ]
+        const STARTER_IP = "192.168.1.58";
 
         const ipInput = document.getElementById('ipAddress');
-        const clockText = document.getElementById('clockText');
+        const boardClock = document.getElementById('boardClock');
         const onTimeInput = document.getElementById('onTime');
         const offTimeInput = document.getElementById('offTime');
         const timerEnabledCheck = document.getElementById('timerEnabled');
@@ -122,61 +271,122 @@
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
         const toggleBtn = document.getElementById('toggleBtn');
-        
-        let isRelayOn = false;
-        ipInput.value = DEFAULT_ESP32_IP;
+        const bulbIcon = document.getElementById('bulbIcon');
+        const warningBanner = document.getElementById('warningBanner');
 
-        function getBaseUrl() {
+        let isRelayOn = false;
+        let isCommunicating = false;
+
+        // ดึงไอพีไปใช้งาน
+        ipInput.value = STARTER_IP;
+
+        // ตรวจสอบความปลอดภัยเบื้องต้น (HTTPS vs HTTP ป้องกันปุ่มกดไม่ติด)
+        if (window.location.protocol === 'https:') {
+            warningBanner.style.display = 'block';
+        }
+
+        function getCleanUrl() {
             let ip = ipInput.value.trim();
-            if (!ip.startsWith('http://')) ip = 'http://' + ip;
+            if (!ip) return "";
+            if (!ip.startsWith('http://') && !ip.startsWith('https://')) {
+                ip = 'http://' + ip;
+            }
             return ip;
         }
 
-        async function sendCommand(endpoint) {
+        // ฟังค์ชันส่งคำสั่งที่จะเปลี่ยน UI ทันทีเพื่อความลื่นไหล (Optimistic Response)
+        async function sendRelayCommand(endpoint) {
+            if (isCommunicating) return;
+            
+            const url = getCleanUrl();
+            if (!url) return alert("กรุณากรอก IP Address ของบอร์ดก่อนครับ");
+
+            // แสดงสถานะกำลังส่งข้อมูล ป้องกันการกดซ้ำซ้อน
+            isCommunicating = true;
+            toggleBtn.disabled = true;
+            toggleBtn.textContent = "WAITING...";
+
             try {
-                const response = await fetch(`${getBaseUrl()}/${endpoint}`);
+                // เพิ่ม Timeout เพื่อไม่ให้ฟังก์ชันค้างนานเกินไปหากบอร์ดหลุด
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+                const response = await fetch(`${url}/${endpoint}`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
                 if (response.ok) {
-                    const state = await response.text();
-                    updateUI(state === 'ON');
+                    const resultText = await response.text();
+                    applyState(resultText === 'ON');
+                } else {
+                    throw new Error("Server response error");
                 }
-            } catch (e) { console.error(e); }
+            } catch (err) {
+                console.error("Transmission Fail: ", err);
+                statusText.textContent = "ส่งคำสั่งล้มเหลว (บอร์ดไม่ตอบสนอง)";
+                statusDot.className = "dot error";
+                // ดึงสถานะจริงกลับมาอัพเดตใหม่
+                checkSystemSync();
+            } finally {
+                isCommunicating = false;
+                toggleBtn.disabled = false;
+            }
         }
 
-        async function checkStatus() {
-            if (!ipInput.value.trim()) return;
+        // อัปเดตรูปร่างหน้าตา UI ทั้งหมดตามสถานะบอร์ด
+        function applyState(isOn) {
+            isRelayOn = isOn;
+            if (isRelayOn) {
+                bulbIcon.classList.add('active');
+                statusDot.className = "dot active";
+                statusText.textContent = "ONLINE • ไฟเปิดอยู่";
+                toggleBtn.textContent = "TURN OFF";
+                toggleBtn.className = "btn power-on";
+            } else {
+                bulbIcon.classList.remove('active');
+                statusDot.className = "dot active";
+                statusText.textContent = "ONLINE • ไฟปิดอยู่";
+                toggleBtn.textContent = "TURN ON";
+                toggleBtn.className = "btn";
+            }
+        }
+
+        // ซิงก์ข้อมูลนาฬิกาและสเกดดูลทั้งหมดจากบอร์ดแบบ Realtime
+        async function checkSystemSync() {
+            const url = getCleanUrl();
+            if (!url || isCommunicating) return;
+
             try {
-                const response = await fetch(`${getBaseUrl()}/status`);
+                const response = await fetch(`${url}/status`);
                 if (response.ok) {
                     const data = await response.json();
-                    updateUI(data.state === 'ON');
-                    clockText.textContent = data.espTime;
                     
-                    // ปรับค่าฟอร์มตามที่บันทึกอยู่ในบอร์ดจริง (ถ้ามีค่า)
+                    applyState(data.state === 'ON');
+                    boardClock.textContent = data.espTime;
+                    
+                    // อัปเดตข้อมูลกล่องข้อเวลา เฉพาะเวลาที่ผู้ใช้ไม่ได้คลิกพิมพ์ค้างไว้
                     if(data.onH !== -1 && data.onM !== -1 && !onTimeInput.matches(':focus')) {
                         onTimeInput.value = `${String(data.onH).padStart(2,'0')}:${String(data.onM).padStart(2,'0')}`;
                     }
                     if(data.offH !== -1 && data.offM !== -1 && !offTimeInput.matches(':focus')) {
                         offTimeInput.value = `${String(data.offH).padStart(2,'0')}:${String(data.offM).padStart(2,'0')}`;
                     }
-                    timerEnabledCheck.checked = data.timerEnabled;
+                    if(!timerEnabledCheck.matches(':focus')) {
+                        timerEnabledCheck.checked = data.timerEnabled;
+                    }
                 }
             } catch (e) {
-                statusText.textContent = "ออฟไลน์";
-                statusDot.className = "dot";
+                statusText.textContent = "OFFLINE • ขาดการติดต่อ";
+                statusDot.className = "dot error";
+                boardClock.textContent = "--:--:--";
+                bulbIcon.classList.remove('active');
             }
         }
 
-        function updateUI(isOn) {
-            isRelayOn = isOn;
-            statusText.textContent = isRelayOn ? "ออนไลน์ • ไฟเปิดอยู่" : "ออนไลน์ • ไฟปิดอยู่";
-            statusDot.className = isRelayOn ? "dot on" : "dot";
-            toggleBtn.textContent = isRelayOn ? "TURN OFF" : "TURN ON";
-            if (isRelayOn) toggleBtn.classList.add('active');
-            else toggleBtn.classList.remove('active');
-        }
-
-        // ฟังก์ชันส่งเวลาที่คุณคีย์จากช่อง Input ไปบันทึกลงบอร์ด ESP32
+        // บันทึกตารางเวลาอัตโนมัติลงตัวบอร์ด
         saveTimerBtn.addEventListener('click', async () => {
+            const url = getCleanUrl();
+            if(!url) return;
+
             const onVal = onTimeInput.value;
             const offVal = offTimeInput.value;
             
@@ -185,25 +395,31 @@
             if (offVal) [offH, offM] = offVal.split(':');
             
             const enabled = timerEnabledCheck.checked;
-            
+            saveTimerBtn.textContent = "SAVING...";
+            saveTimerBtn.disabled = true;
+
             try {
-                const url = `${getBaseUrl()}/set-timer?onH=${onH}&onM=${onM}&offH=${offH}&offM=${offM}&enabled=${enabled}`;
-                const response = await fetch(url);
+                const requestUrl = `${url}/set-timer?onH=${onH}&onM=${onM}&offH=${offH}&offM=${offM}&enabled=${enabled}`;
+                const response = await fetch(requestUrl);
                 if (response.ok) {
-                    alert("บันทึกการตั้งเวลาลงบอร์ด ESP32 สำเร็จแล้ว! 🎉");
+                    alert("บันทึกตารางเวลาลงชิป ESP32 สำเร็จแล้ว! ⚡");
                 }
             } catch (e) {
-                alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+                alert("บันทึกล้มเหลว กรุณาตรวจสอบการเชื่อมต่อ Wi-Fi");
+            } finally {
+                saveTimerBtn.textContent = "💾 บันทึกตารางเวลาลงบอร์ด";
+                saveTimerBtn.disabled = false;
             }
         });
 
+        // เหตุการณ์เมื่อคลิกปุ่มปิดเปิดหลัก
         toggleBtn.addEventListener('click', () => {
-            sendCommand(isRelayOn ? 'relay/off' : 'relay/on');
+            sendRelayCommand(isRelayOn ? 'relay/off' : 'relay/on');
         });
 
-        // ดึงสถานะและเวลาโลกจากบอร์ดทุกๆ 1 วินาที เพื่อให้นาฬิกาเดินตรง
-        checkStatus();
-        setInterval(checkStatus, 1000);
+        // รันลูปดึงข้อมูลซิงโครไนซ์ทุกๆ 1 วินาที เพื่อให้นาฬิกาเดินตรงจุด
+        checkSystemSync();
+        setInterval(checkSystemSync, 1000);
     </script>
 </body>
 </html>
